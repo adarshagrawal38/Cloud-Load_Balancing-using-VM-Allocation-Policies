@@ -62,9 +62,10 @@ public class LBVCFC extends VmAllocationPolicy {
 	
 	//-------- helper functions to edit ---------------	
 	
-	public void test(List<Vm> vmlist) {
+	public void loadBalancer(List<Vm> vmlist) {
 		
 		// getHostList() to get list of hosts
+
 		Log.printLine("-----------------------------------------");
 		/*for (Host host : getHostList()) {
 	
@@ -72,23 +73,30 @@ public class LBVCFC extends VmAllocationPolicy {
 		
 		}*/
 		
-		for(Vm vm : vmlist) {
-		Log.printLine(vm.getUid()+" "+vm.getHost());
-		}
+//		for(Vm vm : vmlist) {
+//		Log.printLine(vm.getUid()+" "+vm.getHost());
+//		}
+		
 		
 		Log.printLine("-----------------------------------------");
-		
+
 		deallocateHostForVm(vmlist.get(0));		
-		Log.printLine("Migrating the VM: " + vmlist.get(0).getUid() + " from the Host: " + vmlist.get(0).getHost());
+		
+		Log.printLine("Migrating the VM: " + vmlist.get(0).getId() + " from the Host: " + vmlist.get(0).getHost().getId());
+		
 		allocateHostForVm(vmlist.get(0));
-		Log.printLine(" to the Host: " + vmlist.get(0).getHost());
+		
+		Log.printLine(" to the Host: " + vmlist.get(0).getHost().getId());
+		
 		
 		Log.printLine("-----------------------------------------");
-		
 		deallocateHostForVm(vmlist.get(7));		
-		Log.printLine("Migrating the VM: " + vmlist.get(7).getUid() + " from the Host: " + vmlist.get(7).getHost());
+		Log.printLine("Migrating the VM: " + vmlist.get(7).getId() + " from the Host: " + vmlist.get(7).getHost().getId());
+
 		allocateHostForVm(vmlist.get(7));
-		Log.printLine(" to the Host: " + vmlist.get(7).getHost());
+		Log.printLine(" to the Host: " + vmlist.get(7).getHost().getId());		
+
+		
 		/*		
 		System.out.println("Size of host listin datacenter is: "+getHostList().size());
 		System.out.println("Size of vm listin datacenter is: "+vmlist.size());
