@@ -1,12 +1,4 @@
-/*
- * Title:        CloudSim Toolkit
- * Description:  CloudSim (Cloud Simulation) Toolkit for Modeling and Simulation of Clouds
- * Licence:      GPL - http://www.gnu.org/copyleft/gpl.html
- *
- * Copyright (c) 2009-2012, The University of Melbourne, Australia
- */
-
-package implementation;
+package org.cloudbus.cloudsim;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +11,7 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.core.CloudSimTags;
 
 /**
  * VmAllocationPolicySimple is an VmAllocationPolicy that chooses, as the host for a VM, the host
@@ -84,9 +77,43 @@ public class LBVCFC extends VmAllocationPolicy {
 		}
 		
 		Log.printLine("-----------------------------------------");
-				
-	
-	}
+		
+		deallocateHostForVm(vmlist.get(0));		
+		Log.printLine("Migrating the VM: " + vmlist.get(0).getUid() + " from the Host: " + vmlist.get(0).getHost());
+		allocateHostForVm(vmlist.get(0));
+		Log.printLine(" to the Host: " + vmlist.get(0).getHost());
+		
+		Log.printLine("-----------------------------------------");
+		
+		deallocateHostForVm(vmlist.get(7));		
+		Log.printLine("Migrating the VM: " + vmlist.get(7).getUid() + " from the Host: " + vmlist.get(7).getHost());
+		allocateHostForVm(vmlist.get(7));
+		Log.printLine(" to the Host: " + vmlist.get(7).getHost());
+		/*		
+		System.out.println("Size of host listin datacenter is: "+getHostList().size());
+		System.out.println("Size of vm listin datacenter is: "+vmlist.size());
+		
+		VMLoadBalancingFuzzy vmAllocationPolicyCustomized=new VMLoadBalancingFuzzy();
+		ArrayList<Integer> maptemp=new ArrayList<Integer>();
+		maptemp=vmAllocationPolicyCustomized.allocationForMigration(getHostList(),vmlist);
+			
+		int host_id=0;
+		int vm_id=0;
+		System.out.println("Size of maptemp: "+maptemp.size());
+		for (int i=0;i<maptemp.size();i=i+2){
+			vm_id=maptemp.get(i);
+			System.out.println("VM id is: "+maptemp.get(i));
+			host_id=maptemp.get(i+1);
+			Map<String, Object> ma;
+			ma=new HashMap<String,Object>();
+			ma.put("Host",getHostList().get(host_id));
+			ma.put("VM",vmlist.get(vm_id));
+			double delay=1.0;
+			System.out.println("Migrate");
+			send(0,delay,CloudSimTags.VM_MIGRATE,ma);
+		*/
+		}
+		
 
 	/**
 	 * Allocates the host with less PEs in use for a given VM.
@@ -97,8 +124,24 @@ public class LBVCFC extends VmAllocationPolicy {
 	 * @post $none
 	 */
 	
-	
-	
+	public boolean allocateHostForVm(Vm vm) {
+		
+		Host host = getHostList().get(5);
+		host.vmCreate(vm);
+		return true;
+	}
+
+	@Override
+	public void deallocateHostForVm(Vm vm) {
+		Host host = getVmTable().remove(vm.getUid());
+		int idx = getHostList().indexOf(host);
+		int pes = 1;
+		if (host != null) {
+			host.vmDestroy(vm);
+			getFreePes().set(idx, getFreePes().get(idx) + pes);
+		}
+	}	
+/*	
 	
 	@Override
 	public boolean allocateHostForVm(Vm vm) {
@@ -165,7 +208,7 @@ public class LBVCFC extends VmAllocationPolicy {
 			getFreePes().set(idx, getFreePes().get(idx) + pes);
 		}
 	}
-
+ */
 	
 	// ------ helper functions -----
 	@Override
