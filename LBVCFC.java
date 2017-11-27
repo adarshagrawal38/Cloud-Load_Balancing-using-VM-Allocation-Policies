@@ -69,19 +69,22 @@ public class LBVCFC extends VmAllocationPolicy {
 	
 	//-------- helper functions to edit ---------------	
 	
-	public void test() {
+	public void test(List<Vm> vmlist) {
 		
 		// getHostList() to get list of hosts
 		Log.printLine("-----------------------------------------");
-		for (Host host : getHostList()) {
+		/*for (Host host : getHostList()) {
 	
 			Log.printLine(host);
 		
+		}*/
+		
+		for(Vm vm : vmlist) {
+		Log.printLine(vm.getUid()+" "+vm.getHost());
 		}
 		
 		Log.printLine("-----------------------------------------");
 				
-		System.exit(0);
 	
 	}
 

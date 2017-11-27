@@ -19,7 +19,7 @@ import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterBroker;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
-import org.cloudbus.cloudsim.Host;
+import org.cloudbus.cloudsim.HostDynamicWorkload;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
@@ -105,20 +105,23 @@ public class FuzzyClusteringSimulation{
 			}
 
 		
-			// Sixth step: perform LB-VC-FC 
-			LBVCFC loadbalance = new LBVCFC(datacenter0.getHostList());
-			loadbalance.test();
-						
+
+	
 			
 			// Seventh step : Starts the simulation
 			CloudSim.startSimulation();			
 			// Final step: Print results when simulation is over
-			//List<Cloudlet> newList = broker.getCloudletReceivedList();
-			
+			// Sixth step: perform LB-VC-FC 
 
+			
+	//		List<Cloudlet> newList = broker.getCloudletReceivedList();
+
+			LBVCFC loadbalance = new LBVCFC(datacenter0.getHostList());
+			loadbalance.test(vmlist);
+			
 			CloudSim.stopSimulation();
 
-        	//printCloudletList(newList);
+		//	printCloudletList(newList);
 
 			Log.printLine("LB-VC-FC Simulation finished!");
 		}
@@ -133,7 +136,7 @@ public class FuzzyClusteringSimulation{
 		// Here are the steps needed to create a PowerDatacenter:
 		// 1. We need to create a list to store
 		//    our machine
-		List<Host> hostList = new ArrayList<Host>();
+		List<HostDynamicWorkload> hostList = new ArrayList<HostDynamicWorkload>();
 
 		// 2. A Machine contains one or more PEs or CPUs/Cores.
 		// In this example, it will have only one core.
@@ -158,7 +161,7 @@ public class FuzzyClusteringSimulation{
 			int bw = 40000;
 	
 			hostList.add(
-	    			new Host(
+	    			new HostDynamicWorkload(
 	    				hostId,
 	    				new RamProvisionerSimple(ram),
 	    				new BwProvisionerSimple(bw),
