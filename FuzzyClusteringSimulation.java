@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
@@ -61,6 +62,7 @@ public class FuzzyClusteringSimulation{
 	/**
 	 * Creates main() to run this example
 	 */
+	
 	
 	public static void main(String[] args) {
 
@@ -114,14 +116,14 @@ public class FuzzyClusteringSimulation{
 			// Sixth step: perform LB-VC-FC 
 
 			
-	//		List<Cloudlet> newList = broker.getCloudletReceivedList();
+			List<Cloudlet> newList = broker.getCloudletReceivedList();
 
 			LBVCFC loadbalance = new LBVCFC(datacenter0.getHostList());
 			loadbalance.test(vmlist);
 			
 			CloudSim.stopSimulation();
 
-		//	printCloudletList(newList);
+		    printCloudletList(newList);
 
 			Log.printLine("LB-VC-FC Simulation finished!");
 		}
@@ -173,24 +175,6 @@ public class FuzzyClusteringSimulation{
 			hostId++;
 		}
 
-		/*//create another machine in the Data center
-		List<Pe> peList2 = new ArrayList<Pe>();
-
-		peList2.add(new Pe(0, new PeProvisionerSimple(mips)));
-
-		hostId++;
-
-		hostList.add(
-    			new Host(
-    				hostId,
-    				new RamProvisionerSimple(ram),
-    				new BwProvisionerSimple(bw),
-    				storage,
-    				peList2,
-    				new VmSchedulerTimeShared(peList2)
-    			)
-    		); // This is our second machine
-*/
 
 
 		// 5. Create a DatacenterCharacteristics object that stores the
@@ -198,7 +182,7 @@ public class FuzzyClusteringSimulation{
 		//    Machines, allocation policy: time- or space-shared, time zone
 		//    and its price (G$/Pe time unit).
 		String arch = "x86";      // system architecture
-		String os = "Linux";          // operating system
+		String os = "CentOs";          // operating system
 		String vmm = "Xen";
 		double time_zone = 10.0;         // time zone this resource located
 		double cost = 3.0;              // the cost of using processing in this resource
@@ -277,7 +261,12 @@ public class FuzzyClusteringSimulation{
 		int ram = 512; //vm memory (MB)
 		int mips = 250;
 		long bw = 1000;
-		int pesNumber = 1; //number of cpus
+		Random randomNumberGenerator = new Random();
+		int random_number = randomNumberGenerator.nextInt(4);
+		if(random_number == 0) {
+			random_number +=1;
+		}
+		int pesNumber = random_number; //number of cpus
 		String vmm = "Xen"; //VMM name
 
 		//create VMs
@@ -300,7 +289,12 @@ public class FuzzyClusteringSimulation{
 		long length = 40000;
 		long fileSize = 300;
 		long outputSize = 300;
-		int pesNumber = 1;
+		Random randomNumberGenerator = new Random();
+		int random_number = randomNumberGenerator.nextInt(4);
+		if(random_number == 0) {
+			random_number +=1;
+		}
+		int pesNumber = random_number;
 		UtilizationModel utilizationModel = new UtilizationModelFull();
 
 		Cloudlet[] cloudlet = new Cloudlet[cloudlets];
