@@ -1,7 +1,6 @@
 package implementation;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +16,8 @@ import org.cloudbus.cloudsim.VmAllocationPolicy;
 
 public class lbfs  extends VmAllocationPolicy{
 
+	
+
 	/** The map between each VM and its allocated host.
          * The map key is a VM UID and the value is the allocated host for that VM. */
 	private Map<String, Host> vmTable;
@@ -27,6 +28,8 @@ public class lbfs  extends VmAllocationPolicy{
 
 	/** The number of free Pes for each host from {@link #getHostList() }. */
 	private List<Integer> freePes;
+	
+	public List<UsageCollector> usageCollectors = new ArrayList<>();
 	
 	
 	
@@ -66,15 +69,18 @@ public class lbfs  extends VmAllocationPolicy{
 // allocatehostforvm - we implement fuzzy inside this	
 @Override
 public boolean allocateHostForVm(Vm vm) {
+
+	
 		
 		// Initialization of variables
 		int requiredPes = vm.getNumberOfPes();
+
 		boolean result = false;
 		int tries = 0;
 		List<Integer> freePesTmp = new ArrayList<Integer>();
 
 		List<FuzzyMapData> fuzzyMapDatas = new ArrayList<>();
-		List<Double> fuzzylist = new ArrayList<>();
+
 
 		double VMRi = vm.getCurrentRequestedTotalMips()/vm.getCurrentRequestedRam();
 
@@ -110,28 +116,13 @@ public boolean allocateHostForVm(Vm vm) {
 
 					fuzzyMapDatas.add(new FuzzyMapData(freePesTmp.get(i), Hri));
 					
-					fuzzylist.add(Hri);
-					
-
-					if (freePesTmp.get(i) > moreFree) 
-					{
-						moreFree = freePesTmp.get(i);
-						idx = i;
-
-					}				
-			}
+				}
 				
-
-					int fuzzyid = minIndex(fuzzylist);
-					System.out.println("-----");
-					System.out.println(fuzzyid);
-
-					
 				Host host;
 				moreFree = Integer.MIN_VALUE;
 				Double closer = Double.MAX_VALUE;
-				
-				for(int i = 0; i< fuzzyMapDatas.size();i++){
+				System.out.println(fuzzyMapDatas.size());
+				for(int i = 0; i< fuzzyMapDatas.size(); i++){
 					
 					if (fuzzyMapDatas.get(i).getPes() >= moreFree && fuzzyMapDatas.get(i).getRi() <= closer) 
 					{
@@ -143,25 +134,15 @@ public boolean allocateHostForVm(Vm vm) {
 				
 				}
 
-					System.out.println(idx);
-
 					System.out.println("-----");
+					System.out.println(idx);
+					System.out.println(getHostList().size());
 				
 
 					host = getHostList().get(idx);
 					result = host.vmCreate(vm);
 
 
-
-//				if(fuzzyid == idx){
-//				
-//				 host = getHostList().get(idx);
-//					result = host.vmCreate(vm);
-//				}
-//				else{
-//				host = getHostList().get(fuzzyid);
-//					result = host.vmCreate(vm);
-//				}
 
 				
 				if (result) 
@@ -170,34 +151,47 @@ public boolean allocateHostForVm(Vm vm) {
 					getVmTable().put(vm.getUid(), host);
 					getUsedPes().put(vm.getUid(), requiredPes);
 					getFreePes().set(idx, getFreePes().get(idx) - requiredPes);
+					
+					List<Double> cpuUsage = new ArrayList<Double>();
+					List<Double> bwUsage = new ArrayList<Double>();
+					List<Double> memUsage = new ArrayList<Double>();
+
+					for(Host hostx : getHostList()) {
+						cpuUsage.add((double) (hostx.getTotalMips()-hostx.getAvailableMips()));
+						bwUsage.add((double) hostx.getBwProvisioner().getUsedBw());
+						memUsage.add((double) hostx.getRamProvisioner().getUsedRam());
+					}
+					
+					UsageCollector usageLists = new UsageCollector(cpuUsage, bwUsage, memUsage);
+					usageCollectors.add(usageLists);
+					
 					result = true;
 					break;
 				} 
 				else 
-				{
+				{					
 					freePesTmp.set(idx, Integer.MIN_VALUE);
 				}
 				tries++;
-			} while (!result && tries < getFreePes().size());
+			} while (!result && tries < getFreePes().size());// 
 		}
 
 		return result;
 		
 }//end of allocate host
 
+public List<UsageCollector> getUsageCollectors() {
 
-public static int minIndex(List<Double> list) {
-  Integer i=0, maxIndex=-1;
- Double max=null;
-  for (Double x : list) {
-    if ((x!=null) && ((max==null) || (x>max))) {
-      max = x;
-      maxIndex = i;
-    }
-    i++;
-  }
-  return maxIndex;
+	return usageCollectors;
 }
+
+
+
+public void setUsageCollectors(List<UsageCollector> usageCollectors) {
+	this.usageCollectors = usageCollectors;
+}
+
+
 
 	@Override
 	public void deallocateHostForVm(Vm vm) {
