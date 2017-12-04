@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim;
+package implementation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +12,6 @@ import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
-
 /**
  * VmAllocationPolicySimple is an VmAllocationPolicy that chooses, as the host for a VM, the host
  * with less PEs in use. It is therefore a Worst Fit policy, allocating VMs into the 
@@ -67,19 +66,20 @@ public class LBVCFC extends VmAllocationPolicy {
 		// getHostList() to get list of hosts
 
 		Log.printLine("-----------------------------------------");
-		/*for (Host host : getHostList()) {
-	
+		for (Host host : getHostList()) {
+			host.getAvailableMips();
 			Log.printLine(host);
 		
-		}*/
+		}
 		
-//		for(Vm vm : vmlist) {
-//		Log.printLine(vm.getUid()+" "+vm.getHost());
-//		}
+		/*for(Vm vm : vmlist) {
+			//vm.getHost().getAvailableMips();
+			Log.printLine(vm.getUid()+" "+vm.getHost());
+		}*/
 		
 		
 		Log.printLine("-----------------------------------------");
-
+		
 		deallocateHostForVm(vmlist.get(0));		
 		
 		Log.printLine("Migrating the VM: " + vmlist.get(0).getId() + " from the Host: " + vmlist.get(0).getHost().getId());
@@ -98,8 +98,8 @@ public class LBVCFC extends VmAllocationPolicy {
 
 		
 		/*		
-		System.out.println("Size of host listin datacenter is: "+getHostList().size());
-		System.out.println("Size of vm listin datacenter is: "+vmlist.size());
+		System.out.println("Size of host list in datacenter is: "+getHostList().size());
+		System.out.println("Size of vm list in datacenter is: "+vmlist.size());
 		
 		VMLoadBalancingFuzzy vmAllocationPolicyCustomized=new VMLoadBalancingFuzzy();
 		ArrayList<Integer> maptemp=new ArrayList<Integer>();

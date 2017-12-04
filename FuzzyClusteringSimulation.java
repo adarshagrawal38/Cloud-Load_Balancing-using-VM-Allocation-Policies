@@ -7,6 +7,7 @@
  * 
  */
 package implementation;
+import java.util.concurrent.ThreadLocalRandom;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -20,7 +21,8 @@ import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterBroker;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
-import org.cloudbus.cloudsim.HostDynamicWorkload;
+import org.cloudbus.cloudsim.Host;
+//import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
@@ -35,10 +37,7 @@ import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 import org.omg.Messaging.SyncScopeHelper;
-
-// Importing LBVCFC
 import implementation.LBVCFC;
-
 /**
  * A simple example showing how to create
  * a datacenter with two hosts and run two
@@ -118,14 +117,14 @@ public class FuzzyClusteringSimulation{
 			
 			List<Cloudlet> newList = broker.getCloudletReceivedList();
 
-			LBVCFC loadbalance = new LBVCFC(datacenter0.getHostList());
-			loadbalance.test(vmlist);
+//			LBVCFC loadbalance = new LBVCFC(datacenter0.getHostList());
+//			loadbalance.loadBalancer(vmlist);
 			
 			CloudSim.stopSimulation();
 
-		    printCloudletList(newList);
+//		    printCloudletList(newList);
 
-			Log.printLine("LB-VC-FC Simulation finished!");
+//			Log.printLine("LB-VC-FC Simulation finished!");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -138,7 +137,7 @@ public class FuzzyClusteringSimulation{
 		// Here are the steps needed to create a PowerDatacenter:
 		// 1. We need to create a list to store
 		//    our machine
-		List<HostDynamicWorkload> hostList = new ArrayList<HostDynamicWorkload>();
+		List<Host> hostList = new ArrayList<Host>();
 
 		// 2. A Machine contains one or more PEs or CPUs/Cores.
 		// In this example, it will have only one core.
@@ -150,6 +149,7 @@ public class FuzzyClusteringSimulation{
 		int mips = 2800;
 		int hostId=0;
 		peList.add(new Pe(0, new PeProvisionerSimple(mips))); // need to store Pe id and MIPS Rating
+
 		for (int i=0;i< 25;i++)
 		{
 			// 3. Create PEs and add these into a list.
@@ -163,7 +163,7 @@ public class FuzzyClusteringSimulation{
 			int bw = 40000;
 	
 			hostList.add(
-	    			new HostDynamicWorkload(
+	    			new Host(
 	    				hostId,
 	    				new RamProvisionerSimple(ram),
 	    				new BwProvisionerSimple(bw),
@@ -174,7 +174,7 @@ public class FuzzyClusteringSimulation{
 	    		); // This is our first machine
 			hostId++;
 		}
-
+		
 
 
 		// 5. Create a DatacenterCharacteristics object that stores the
@@ -197,11 +197,13 @@ public class FuzzyClusteringSimulation{
 		// 6. Finally, we need to create a PowerDatacenter object.
 		Datacenter datacenter = null;
 		try {
-			datacenter = new Datacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
+//			datacenter = new Datacenter(name, characteristics, new VmAllocationPolicySimple(hostList), storageList, 0);
+
+			datacenter = new Datacenter(name, characteristics, new lbfs(hostList), storageList, 0);
+		
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 		return datacenter;
 }
 
@@ -257,16 +259,17 @@ public class FuzzyClusteringSimulation{
 		LinkedList<Vm> list = new LinkedList<Vm>();
 
 		//VM Parameters
+		int randomNum = ThreadLocalRandom.current().nextInt(200, 1001);
+		Random randomNumberGenerator = new Random();
 		long size = 10000; //image size (MB)
 		int ram = 512; //vm memory (MB)
-		int mips = 250;
-		long bw = 1000;
-		Random randomNumberGenerator = new Random();
-		int random_number = randomNumberGenerator.nextInt(4);
-		if(random_number == 0) {
-			random_number +=1;
-		}
-		int pesNumber = random_number; //number of cpus
+		//randomize mips
+		int mips = randomNum;
+		randomNum = ThreadLocalRandom.current().nextInt(1000, 2501);
+		long bw = randomNum;
+		randomNum = ThreadLocalRandom.current().nextInt(1,5);
+
+		int pesNumber = randomNum; //number of cpus
 		String vmm = "Xen"; //VMM name
 
 		//create VMs

@@ -1,6 +1,7 @@
 package implementation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,9 @@ public class lbfs  extends VmAllocationPolicy{
 
 	/** The number of free Pes for each host from {@link #getHostList() }. */
 	private List<Integer> freePes;
-
+	
+	
+	
 	/**
 	 * Creates a new VmAllocationPolicySimple object.
 	 * 
@@ -40,13 +43,15 @@ public class lbfs  extends VmAllocationPolicy{
 
 		setFreePes(new ArrayList<Integer>());
 		for (Host host : getHostList()) {			
-			getFreePes().add(host.getNumberOfPes());
 		
+			getFreePes().add(host.getNumberOfPes());		
 		}
 
 		setVmTable(new HashMap<String, Host>());
 		setUsedPes(new HashMap<String, Integer>());
 	}
+
+
 
 
 	/**
@@ -67,13 +72,23 @@ public boolean allocateHostForVm(Vm vm) {
 		boolean result = false;
 		int tries = 0;
 		List<Integer> freePesTmp = new ArrayList<Integer>();
+
+		List<FuzzyMapData> fuzzyMapDatas = new ArrayList<>();
+		List<Double> fuzzylist = new ArrayList<>();
+
+		double VMRi = vm.getCurrentRequestedTotalMips()/vm.getCurrentRequestedRam();
+
 		
-		// Creating freespesTEmp arr list
+		
+		// Creating freespesTEmp array list
 		for (Integer freePes : getFreePes()) 
 		{
+			
 			freePesTmp.add(freePes);
 		}
 
+		
+		
 		if (!getVmTable().containsKey(vm.getUid())) 
 		{ 
 			// if this vm was not created
@@ -87,16 +102,68 @@ public boolean allocateHostForVm(Vm vm) {
 				// we want the host with less pes in use
 				for (int i = 0; i < freePesTmp.size(); i++) 
 				{
+						
+					// Getting available mips and ram per host
+					Host host = getHostList().get(i);
+
+					double Hri = Math.sqrt(Math.pow((VMRi-host.getAvailableMips()/host.getRamProvisioner().getAvailableRam()),2));
+
+					fuzzyMapDatas.add(new FuzzyMapData(freePesTmp.get(i), Hri));
+					
+					fuzzylist.add(Hri);
+					
+
 					if (freePesTmp.get(i) > moreFree) 
 					{
 						moreFree = freePesTmp.get(i);
 						idx = i;
-					}
+
+					}				
+			}
+				
+
+					int fuzzyid = minIndex(fuzzylist);
+					System.out.println("-----");
+					System.out.println(fuzzyid);
+
+					
+				Host host;
+				moreFree = Integer.MIN_VALUE;
+				Double closer = Double.MAX_VALUE;
+				
+				for(int i = 0; i< fuzzyMapDatas.size();i++){
+					
+					if (fuzzyMapDatas.get(i).getPes() >= moreFree && fuzzyMapDatas.get(i).getRi() <= closer) 
+					{
+						moreFree = fuzzyMapDatas.get(i).getPes();
+						closer = fuzzyMapDatas.get(i).getRi();
+						idx = i;
+						
+					}				
+				
 				}
 
-				Host host = getHostList().get(idx);
-				result = host.vmCreate(vm);
+					System.out.println(idx);
 
+					System.out.println("-----");
+				
+
+					host = getHostList().get(idx);
+					result = host.vmCreate(vm);
+
+
+
+//				if(fuzzyid == idx){
+//				
+//				 host = getHostList().get(idx);
+//					result = host.vmCreate(vm);
+//				}
+//				else{
+//				host = getHostList().get(fuzzyid);
+//					result = host.vmCreate(vm);
+//				}
+
+				
 				if (result) 
 				{ 
 					// if vm were succesfully created in the host
@@ -117,6 +184,20 @@ public boolean allocateHostForVm(Vm vm) {
 		return result;
 		
 }//end of allocate host
+
+
+public static int minIndex(List<Double> list) {
+  Integer i=0, maxIndex=-1;
+ Double max=null;
+  for (Double x : list) {
+    if ((x!=null) && ((max==null) || (x>max))) {
+      max = x;
+      maxIndex = i;
+    }
+    i++;
+  }
+  return maxIndex;
+}
 
 	@Override
 	public void deallocateHostForVm(Vm vm) {
@@ -217,4 +298,8 @@ public boolean allocateHostForVm(Vm vm) {
 
 		return false;
 	}
+
+	
+
 }
+
