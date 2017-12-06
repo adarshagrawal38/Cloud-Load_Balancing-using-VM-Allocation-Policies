@@ -1,3 +1,6 @@
+
+
+
 package implementation;
 
 import java.util.ArrayList;
@@ -14,7 +17,7 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
 
-public class lbfs  extends VmAllocationPolicy{
+public class advancedVMAllocationPolicy   extends VmAllocationPolicy{
 
 	
 
@@ -41,17 +44,13 @@ public class lbfs  extends VmAllocationPolicy{
 	 * @post $none
 	 */
 	
-	public lbfs(List<? extends Host> list) {
+	public advancedVMAllocationPolicy(List<? extends Host> list) {
 		super(list);
 
-		setFreePes(new ArrayList<Integer>());
-		for (Host host : getHostList()) {			
-		
-			getFreePes().add(host.getNumberOfPes());		
-		}
 
 		setVmTable(new HashMap<String, Host>());
-		setUsedPes(new HashMap<String, Integer>());
+//		setUsedPes(new HashMap<String, Integer>());
+		
 	}
 
 
@@ -66,100 +65,89 @@ public class lbfs  extends VmAllocationPolicy{
 	 * @post $none
 	 */
 	
-// allocatehostforvm - we implement fuzzy inside this	
+// allocatehostforvm - we implement advanced allocation inside this	
+	
 @Override
 public boolean allocateHostForVm(Vm vm) {
 
 	
 		
 		// Initialization of variables
-		int requiredPes = vm.getNumberOfPes();
 
 		boolean result = false;
 		int tries = 0;
-		List<Integer> freePesTmp = new ArrayList<Integer>();
 
 		List<FuzzyMapData> fuzzyMapDatas = new ArrayList<>();
 
 
-		double requestedmips = vm.getCurrentRequestedMaxMips();
-		double requestedram = vm.getCurrentRequestedRam();
+		double requestedMips = vm.getCurrentRequestedTotalMips();
+		double requestedRam = vm.getCurrentRequestedRam();
 		double requestedbw = vm.getCurrentRequestedBw();
 		
+		List<Host> listOfHosts = getHostList();
 		
-		// Creating freespesTEmp array list
-		for (Integer freePes : getFreePes()) 
-		{
-			
-			freePesTmp.add(freePes);
-		}
-
 		
 		
 		if (!getVmTable().containsKey(vm.getUid())) 
 		{ 
 			// if this vm was not created
+
+			for(int i = 0; i < listOfHosts.size(); i++) {
+				
+					// calculating distance Ci/Mi
+			
+					// creating obj for host containing ram and available mips
+					fuzzyMapDatas.add(new FuzzyMapData(listOfHosts.get(i).getRamProvisioner().getAvailableRam(),listOfHosts.get(i).getAvailableMips()));
+			
+			}
 	
 			do {
 
-				// we still trying until we find a host or until we try all of them
-				int moreFree = Integer.MIN_VALUE;
 				int idx = -1;
-
-				// we want the host with less pes in use
-
-				for (int i = 0; i < freePesTmp.size(); i++) 
-				{
 						
-					// Getting available mips and ram per host
-
-					Host host = getHostList().get(i);
-
-					double membership_value = Math.sqrt(Math.pow(requestedmips-host.getAvailableMips() ,2)
-							+Math.pow(requestedram-host.getRamProvisioner().getAvailableRam() ,2)
-							+Math.pow(requestedbw-host.getBwProvisioner().getAvailableBw() ,2));
-					fuzzyMapDatas.add(new FuzzyMapData(freePesTmp.get(i), membership_value));
-					
-				}
-				
-				Host host;
-				moreFree = Integer.MIN_VALUE;
-				Double closer = Double.MIN_VALUE;
-				System.out.println(fuzzyMapDatas.size());
-				
-				for(int i = 0; i< fuzzyMapDatas.size(); i++){
-//					fuzzyMapDatas.get(i).getPes() >= moreFree && 
-					// && getHostList().get(i).getRamProvisioner().getAvailableRam() >= vm.getRam()
-					if (fuzzyMapDatas.get(i).getRi() > closer) 
-					{
-//						moreFree = fuzzyMapDatas.get(i).getPes();
-						closer = fuzzyMapDatas.get(i).getRi();
+				for(int i= 0; i < fuzzyMapDatas.size(); i++)
+				{		
+					Integer ram = fuzzyMapDatas.get(i).getPes();
+					Double mips = fuzzyMapDatas.get(i).getRi();
+					double bw =  getHostList().get(i).getBwProvisioner().getAvailableBw();
+					if(ram >= requestedRam && mips >= requestedMips && bw >= requestedbw)
+					{						
 						idx = i;
-						
-					}				
+						break;
+					
+					}
 				
 				}
-
+				
+				if(idx == -1) {
+				
+					double maxAvailableMips = Double.MIN_VALUE;
+					for(Host host: getHostList()) {
+						if(host.getAvailableMips() > maxAvailableMips && host.getRamProvisioner().getAvailableRam() > requestedRam) {
+						idx = host.getId();
+						maxAvailableMips = host.getAvailableMips();
+					}
+				}
+			}
+				Host host;
 				host = getHostList().get(idx);
 				result = host.vmCreate(vm);
-
+				
 				if (result) 
 				{ 
 					// if vm were succesfully created in the host
+					System.out.println("Success");
 					getVmTable().put(vm.getUid(), host);
-					getUsedPes().put(vm.getUid(), requiredPes);
-					getFreePes().set(idx, getFreePes().get(idx) - requiredPes);
 					
 					List<Double> cpuUsage = new ArrayList<Double>();
 					List<Double> bwUsage = new ArrayList<Double>();
 					List<Double> memUsage = new ArrayList<Double>();
 
 					for(Host hostx : getHostList()) {
-						
+
 						cpuUsage.add((double) (hostx.getTotalMips()-hostx.getAvailableMips()));
 						bwUsage.add((double) hostx.getBwProvisioner().getUsedBw());
 						memUsage.add((double) hostx.getRamProvisioner().getUsedRam());
-
 					}
 					
 					UsageCollector usageLists = new UsageCollector(cpuUsage, bwUsage, memUsage);
@@ -170,11 +158,13 @@ public boolean allocateHostForVm(Vm vm) {
 				} 
 				else 
 				{	
-					fuzzyMapDatas.clear();
-					freePesTmp.set(idx, Integer.MIN_VALUE);
+					fuzzyMapDatas.get(idx).setRi(0.0);
+					fuzzyMapDatas.get(idx).setPes(0);
+					
 				}
 				tries++;
-			} while (!result && tries < getFreePes().size());// 
+			} while (!result && tries < listOfHosts.size());
+			
 		}
 
 		return result;
@@ -197,11 +187,11 @@ public void setUsageCollectors(List<UsageCollector> usageCollectors) {
 	@Override
 	public void deallocateHostForVm(Vm vm) {
 		Host host = getVmTable().remove(vm.getUid());
-		int idx = getHostList().indexOf(host);
-		int pes = getUsedPes().remove(vm.getUid());
+//		int idx = getHostList().indexOf(host);
+//		int pes = getUsedPes().remove(vm.getUid());
 		if (host != null) {
 			host.vmDestroy(vm);
-			getFreePes().set(idx, getFreePes().get(idx) + pes);
+//			getFreePes().set(idx, getFreePes().get(idx) + pes);
 		}
 	}
 
