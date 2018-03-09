@@ -3,7 +3,7 @@
 ![San Jose State University](https://i.imgur.com/cShW5MA.gif?1)
 ![..](https://i.imgur.com/QIGOoLy.png?1)
 
-A research project towards completion of CS218 - Topics in Cloud Computing.
+A collaborative research project towards completion of CS218 - Topics in Cloud Computing.
 
 This project consists of 3 VM allocation policies implemented in CloudSim-
  1. CloudSim's simple VM allocation policy (1)
