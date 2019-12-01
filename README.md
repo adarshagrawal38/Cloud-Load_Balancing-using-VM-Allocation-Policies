@@ -1,8 +1,5 @@
 # Cloud Load Balancing thorugh VM allocation policies
 
-![San Jose State University](https://i.imgur.com/cShW5MA.gif?1)
-![..](https://i.imgur.com/QIGOoLy.png?1)
-
 A collaborative research project towards completion of CS218 - Topics in Cloud Computing.
 
 This project consists of 3 VM allocation policies implemented in CloudSim-
